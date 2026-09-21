@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A modern Minecraft skin viewer powered by MineSkin.">
+  <title>MineSkin Viewer</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b0d10;
+      color: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid #20242b;
+      padding: 18px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #55d86a;
+    }
+
+    header a {
+      color: #9da5b1;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    main {
+      width: min(1100px, 90%);
+      margin: 0 auto;
+      padding: 80px 0;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 55px;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 76px);
+      line-height: 1;
+      letter-spacing: -3px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: #55d86a;
+    }
+
+    .hero p {
+      color: #9da5b1;
+      font-size: 18px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .search {
+      display: flex;
+      gap: 10px;
+      max-width: 650px;
+      margin: 35px auto 0;
+    }
+
+    .search input {
+      flex: 1;
+      background: #13161b;
+      border: 1px solid #292e36;
+      color: white;
+      padding: 15px 17px;
+      border-radius: 10px;
+      outline: none;
+      font-size: 16px;
+    }
+
+    .search input:focus {
+      border-color: #55d86a;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      background: #55d86a;
+      color: #071009;
+      padding: 0 24px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #6eea7e;
+      transform: translateY(-1px);
+    }
+
+    .viewer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: #111419;
+      border: 1px solid #20242b;
+      border-radius: 16px;
+      padding: 25px;
+    }
+
+    .preview {
+      min-height: 450px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        linear-gradient(45deg, #15191f 25%, transparent 25%),
+        linear-gradient(-45deg, #15191f 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #15191f 75%),
+        linear-gradient(-45deg, transparent 75%, #15191f 75%);
+      background-size: 32px 32px;
+      background-position: 0 0, 0 16px, 16px -16px, -16px 0;
+    }
+
+    .preview img {
+      max-width: 85%;
+      max-height: 390px;
+      image-rendering: pixelated;
+      object-fit: contain;
+    }
+
+    .info h2 {
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: #89919d;
+      font-size: 14px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #20242b;
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .secondary {
+      background: #20252d;
+      color: white;
+    }
+
+    .secondary:hover {
+      background: #2a3039;
+    }
+
+    .status {
+      text-align: center;
+      color: #89919d;
+      margin-top: 20px;
+      min-height: 20px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: #626b77;
+      font-size: 13px;
+    }
+
+    @media (max-width: 750px) {
+      .viewer {
+        grid-template-columns: 1fr;
+      }
+
+      .search {
+        flex-direction: column;
+      }
+
+      button {
+        height: 50px;
+      }
+
+      .hero {
+        margin-bottom: 35px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">Mine<span>Skin</span> Viewer</div>
+    <a href="https://mineskin.eu/" target="_blank" rel="noopener noreferrer">
+      MineSkin API
+    </a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Explore <span>Minecraft</span> Skins.</h1>
+      <p>
+        Search for a Minecraft player and inspect their skin instantly.
+      </p>
+
+      <form class="search" id="searchForm">
+        <input
+          id="username"
+          type="text"
+          placeholder="Enter Minecraft username..."
+          maxlength="16"
+          autocomplete="off"
+          required
+        >
+        <button type="submit">Search</button>
+      </form>
+
+      <div class="status" id="status"></div>
+    </section>
+
+    <section class="viewer">
+      <div class="card preview">
+        <img id="skinImage"
+             src="https://mineskin.eu/helm/Steve/200"
+             alt="Minecraft skin preview">
+      </div>
+
+      <div class="card info">
+        <h2 id="playerName">Steve</h2>
+        <p class="muted">Minecraft skin preview</p>
+
+        <div style="margin-top: 30px;">
+          <div class="info-row">
+            <span>Player</span>
+            <strong id="playerValue">Steve</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Preview</span>
+            <strong>Head</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Source</span>
+            <strong>MineSkin</strong>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="downloadBtn">Download</button>
+          <button class="secondary" id="openBtn">Open Skin</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Minecraft is a trademark of Mojang Studios.
+    This project is an independent fan project.
+  </footer>
+
+  <script>
+    const form = document.getElementById("searchForm");
+    const usernameInput = document.getElementById("username");
+    const skinImage = document.getElementById("skinImage");
+    const playerName = document.getElementById("playerName");
+    const playerValue = document.getElementById("playerValue");
+    const status = document.getElementById("status");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const openBtn = document.getElementById("openBtn");
+
+    let currentUsername = "Steve";
+
+    function updateSkin(username) {
+      const cleanUsername = username.trim();
+
+      if (!cleanUsername) return;
+
+      currentUsername = cleanUsername;
+
+      // MineSkin image endpoint
+      const imageUrl =
+        `https://mineskin.eu/helm/${encodeURIComponent(cleanUsername)}/300`;
+
+      skinImage.src = imageUrl;
+      skinImage.alt = `${cleanUsername} Minecraft skin`;
+
+      playerName.textContent = cleanUsername;
+      playerValue.textContent = cleanUsername;
+
+      status.textContent = `Loading skin for ${cleanUsername}...`;
+
+      skinImage.onload = () => {
+        status.textContent = "";
+      };
+
+      skinImage.onerror = () => {
+        status.textContent = "Could not load this skin.";
+      };
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      updateSkin(usernameInput.value);
+    });
+
+    openBtn.addEventListener("click", () => {
+      const url =
+        `https://mineskin.eu/helm/${encodeURIComponent(currentUsername)}/600`;
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      const url =
+        `https://mineskin.eu/download/${encodeURIComponent(currentUsername)}`;
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+  </script>
+
+</body>
+</html>
