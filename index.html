@@ -1,214 +1,854 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-  <link rel="icon" type="image/png" href="favicon.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A modern Minecraft skin viewer powered by MineSkin.">
-  <title>MineSkin Viewer</title>
+
+  <title>SkySkin — Minecraft Skin Viewer</title>
+  <meta name="description" content="Explore, preview and download Minecraft skins.">
+
+  <link rel="icon" type="image/png" href="favicon.png">
 
   <style>
+    :root {
+      --blue: #5ab8ff;
+      --blue-dark: #287dc1;
+      --white: #ffffff;
+      --text: #17324d;
+      --muted: #5d7890;
+      --glass: rgba(255, 255, 255, 0.72);
+      --border: rgba(255, 255, 255, 0.85);
+      --shadow: 0 20px 60px rgba(35, 100, 145, 0.18);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    body {
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0b0d10;
-      color: #f5f7fa;
-      min-height: 100vh;
+    html {
+      scroll-behavior: smooth;
     }
 
-    header {
-      border-bottom: 1px solid #20242b;
-      padding: 18px 7%;
+    body {
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+
+      background:
+        linear-gradient(
+          180deg,
+          #56baff 0%,
+          #8bd2ff 32%,
+          #c9edff 68%,
+          #f4fcff 100%
+        );
+    }
+
+    /* =========================
+       SKY BACKGROUND
+    ========================= */
+
+    .sky {
+      position: fixed;
+      inset: 0;
+      z-index: -10;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .sun {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      right: 10%;
+      top: 9%;
+
+      border-radius: 50%;
+
+      background:
+        radial-gradient(
+          circle,
+          #fffbd0 0%,
+          #fff3a1 45%,
+          rgba(255, 228, 113, 0.5) 70%,
+          transparent 72%
+        );
+
+      filter: blur(1px);
+      box-shadow:
+        0 0 60px rgba(255, 237, 147, 0.8),
+        0 0 130px rgba(255, 224, 94, 0.45);
+
+      animation: sunFloat 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes sunFloat {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(18px);
+      }
+    }
+
+    .cloud {
+      position: absolute;
+      width: 220px;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: 100px;
+      filter: blur(1px);
+      opacity: 0.8;
+      box-shadow: 0 12px 25px rgba(65, 140, 180, 0.08);
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      background: inherit;
+      border-radius: 50%;
+    }
+
+    .cloud::before {
+      width: 105px;
+      height: 105px;
+      left: 35px;
+      bottom: 15px;
+    }
+
+    .cloud::after {
+      width: 80px;
+      height: 80px;
+      right: 30px;
+      bottom: 10px;
+    }
+
+    .cloud-1 {
+      top: 17%;
+      left: -260px;
+      animation: cloudMove 38s linear infinite;
+    }
+
+    .cloud-2 {
+      top: 42%;
+      left: -320px;
+      transform: scale(0.7);
+      opacity: 0.55;
+      animation: cloudMove 52s linear infinite 5s;
+    }
+
+    .cloud-3 {
+      top: 68%;
+      left: -300px;
+      transform: scale(1.15);
+      opacity: 0.48;
+      animation: cloudMove 65s linear infinite 12s;
+    }
+
+    .cloud-4 {
+      top: 8%;
+      left: -350px;
+      transform: scale(0.55);
+      opacity: 0.4;
+      animation: cloudMove 72s linear infinite 17s;
+    }
+
+    @keyframes cloudMove {
+      from {
+        transform: translateX(0) scale(var(--scale, 1));
+      }
+
+      to {
+        transform: translateX(calc(100vw + 700px)) scale(var(--scale, 1));
+      }
+    }
+
+    .bird {
+      position: absolute;
+      color: rgba(30, 86, 120, 0.28);
+      font-size: 20px;
+      animation: birdMove 22s linear infinite;
+    }
+
+    .bird-1 {
+      top: 23%;
+      left: -100px;
+    }
+
+    .bird-2 {
+      top: 30%;
+      left: -200px;
+      animation-delay: 5s;
+      transform: scale(0.7);
+    }
+
+    @keyframes birdMove {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(calc(100vw + 400px));
+      }
+    }
+
+    /* =========================
+       NAVIGATION
+    ========================= */
+
+    nav {
+      width: min(1180px, 92%);
+      margin: 20px auto 0;
+
+      padding: 13px 18px;
+
       display: flex;
       align-items: center;
       justify-content: space-between;
+
+      background: rgba(255, 255, 255, 0.58);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+
+      border: 1px solid var(--border);
+      border-radius: 20px;
+
+      box-shadow: 0 12px 40px rgba(33, 103, 148, 0.12);
     }
 
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 900;
+      color: #174a70;
     }
 
-    .logo span {
-      color: #55d86a;
+    .logo-icon {
+      width: 39px;
+      height: 39px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 12px;
+
+      background: linear-gradient(145deg, #6bc7ff, #328ee1);
+      color: white;
+
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.6),
+        0 7px 18px rgba(38, 132, 197, .25);
     }
 
-    header a {
-      color: #9da5b1;
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
       text-decoration: none;
+      color: #38617b;
+      font-weight: 700;
       font-size: 14px;
     }
 
+    .nav-links a:hover {
+      color: #1682ce;
+    }
+
+    /* =========================
+       HERO
+    ========================= */
+
     main {
-      width: min(1100px, 90%);
-      margin: 0 auto;
-      padding: 80px 0;
+      width: min(1180px, 92%);
+      margin: auto;
     }
 
     .hero {
       text-align: center;
-      margin-bottom: 55px;
+      padding: 105px 0 70px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      padding: 8px 14px;
+
+      border-radius: 999px;
+
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.8);
+
+      color: #31729b;
+      font-size: 13px;
+      font-weight: 800;
+
+      box-shadow: 0 8px 25px rgba(50, 120, 160, .1);
     }
 
     .hero h1 {
-      font-size: clamp(42px, 7vw, 76px);
-      line-height: 1;
-      letter-spacing: -3px;
-      margin-bottom: 20px;
+      margin-top: 22px;
+
+      font-size: clamp(50px, 8vw, 92px);
+      line-height: .95;
+      letter-spacing: -5px;
+
+      color: #123c5d;
+
+      text-shadow:
+        0 3px 0 rgba(255,255,255,.65),
+        0 15px 35px rgba(36, 103, 140, .13);
     }
 
     .hero h1 span {
-      color: #55d86a;
+      color: #238bd1;
     }
 
     .hero p {
-      color: #9da5b1;
+      max-width: 650px;
+      margin: 25px auto 0;
+
+      color: #476c83;
       font-size: 18px;
-      max-width: 600px;
-      margin: auto;
+      line-height: 1.7;
     }
 
+    /* =========================
+       SEARCH
+    ========================= */
+
     .search {
+      width: min(650px, 100%);
+      margin: 35px auto 0;
+
       display: flex;
       gap: 10px;
-      max-width: 650px;
-      margin: 35px auto 0;
+
+      padding: 8px;
+
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(16px);
+
+      border: 1px solid white;
+      border-radius: 17px;
+
+      box-shadow: var(--shadow);
     }
 
     .search input {
       flex: 1;
-      background: #13161b;
-      border: 1px solid #292e36;
-      color: white;
-      padding: 15px 17px;
-      border-radius: 10px;
-      outline: none;
+
+      border: 0;
+      outline: 0;
+
+      background: transparent;
+
+      padding: 14px 15px;
+
+      color: #17324d;
       font-size: 16px;
     }
 
-    .search input:focus {
-      border-color: #55d86a;
+    .search input::placeholder {
+      color: #7693a8;
     }
 
-    button {
+    .search button {
       border: 0;
-      border-radius: 10px;
-      background: #55d86a;
-      color: #071009;
-      padding: 0 24px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+      border-radius: 12px;
 
-    button:hover {
-      background: #6eea7e;
-      transform: translateY(-1px);
-    }
+      padding: 0 25px;
 
-    .viewer {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+      background: linear-gradient(
+        135deg,
+        #5fc3ff,
+        #2789d5
+      );
 
-    .card {
-      background: #111419;
-      border: 1px solid #20242b;
-      border-radius: 16px;
-      padding: 25px;
-    }
-
-    .preview {
-      min-height: 450px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background:
-        linear-gradient(45deg, #15191f 25%, transparent 25%),
-        linear-gradient(-45deg, #15191f 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #15191f 75%),
-        linear-gradient(-45deg, transparent 75%, #15191f 75%);
-      background-size: 32px 32px;
-      background-position: 0 0, 0 16px, 16px -16px, -16px 0;
-    }
-
-    .preview img {
-      max-width: 85%;
-      max-height: 390px;
-      image-rendering: pixelated;
-      object-fit: contain;
-    }
-
-    .info h2 {
-      margin-bottom: 8px;
-    }
-
-    .muted {
-      color: #89919d;
-      font-size: 14px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 14px 0;
-      border-bottom: 1px solid #20242b;
-    }
-
-    .info-row:last-child {
-      border-bottom: 0;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 25px;
-    }
-
-    .secondary {
-      background: #20252d;
       color: white;
+      font-weight: 900;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 8px 18px rgba(34, 133, 203, .25);
+
+      transition: .2s;
     }
 
-    .secondary:hover {
-      background: #2a3039;
+    .search button:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 25px rgba(34, 133, 203, .35);
     }
 
     .status {
-      text-align: center;
-      color: #89919d;
-      margin-top: 20px;
-      min-height: 20px;
+      min-height: 22px;
+      margin-top: 15px;
+
+      color: #52758c;
+      font-size: 14px;
     }
 
-    footer {
+    /* =========================
+       EXAMPLE SKINS
+    ========================= */
+
+    .section {
+      padding: 35px 0 70px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+
+      margin-bottom: 20px;
+    }
+
+    .section-title h2 {
+      font-size: 28px;
+      color: #174461;
+    }
+
+    .section-title p {
+      color: #68879b;
+      font-size: 14px;
+    }
+
+    .skin-row {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+    }
+
+    .skin-card {
+      border: 1px solid rgba(255,255,255,.9);
+
+      background: rgba(255,255,255,.58);
+      backdrop-filter: blur(12px);
+
+      border-radius: 17px;
+
+      padding: 15px 10px;
+
       text-align: center;
-      padding: 40px;
-      color: #626b77;
+
+      cursor: pointer;
+
+      transition: .22s;
+
+      box-shadow: 0 10px 30px rgba(44, 108, 143, .08);
+    }
+
+    .skin-card:hover {
+      transform: translateY(-7px);
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 18px 35px rgba(42, 110, 148, .15);
+    }
+
+    .skin-card img {
+      width: 64px;
+      height: 64px;
+
+      object-fit: contain;
+      image-rendering: pixelated;
+
+      display: block;
+      margin: auto auto 10px;
+    }
+
+    .skin-card span {
+      font-size: 12px;
+      font-weight: 800;
+      color: #42667d;
+    }
+
+    /* =========================
+       VIEWER
+    ========================= */
+
+    .viewer {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+
+      padding-bottom: 90px;
+    }
+
+    .glass {
+      border: 1px solid rgba(255,255,255,.85);
+
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+
+      border-radius: 25px;
+
+      box-shadow: var(--shadow);
+    }
+
+    .character-area {
+      min-height: 600px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      position: relative;
+      overflow: hidden;
+
+      background:
+        radial-gradient(
+          circle at 50% 40%,
+          rgba(255,255,255,.75),
+          rgba(255,255,255,.2) 40%,
+          transparent 65%
+        );
+    }
+
+    .character-area::after {
+      content: "";
+
+      position: absolute;
+      bottom: 50px;
+
+      width: 230px;
+      height: 35px;
+
+      border-radius: 50%;
+
+      background: rgba(36, 103, 140, .15);
+      filter: blur(10px);
+    }
+
+    .character {
+      position: relative;
+      z-index: 2;
+
+      width: 180px;
+      height: 440px;
+
+      transform: perspective(800px) rotateY(-10deg);
+
+      filter:
+        drop-shadow(18px 25px 18px rgba(25,80,110,.18));
+
+      transition: transform .4s ease;
+    }
+
+    .character:hover {
+      transform:
+        perspective(800px)
+        rotateY(15deg)
+        translateY(-5px);
+    }
+
+    .head {
+      position: absolute;
+
+      width: 150px;
+      height: 150px;
+
+      left: 15px;
+      top: 0;
+
+      background:
+        linear-gradient(
+          135deg,
+          #7b4c2f 0 12%,
+          #e0a66d 13% 72%,
+          #b66d3c 73%
+        );
+
+      border: 8px solid #56331f;
+
+      image-rendering: pixelated;
+
+      box-shadow:
+        inset -20px -20px 0 rgba(0,0,0,.08),
+        inset 15px 10px 0 rgba(255,255,255,.08);
+    }
+
+    .head::before {
+      content: "••";
+
+      position: absolute;
+      left: 38px;
+      top: 64px;
+
+      font-size: 35px;
+      letter-spacing: 32px;
+
+      color: #222;
+    }
+
+    .body {
+      position: absolute;
+
+      width: 145px;
+      height: 175px;
+
+      left: 18px;
+      top: 150px;
+
+      background:
+        linear-gradient(
+          90deg,
+          #3479b9,
+          #59a7df 50%,
+          #28689e
+        );
+
+      border: 8px solid #1f4d74;
+    }
+
+    .arm {
+      position: absolute;
+
+      width: 55px;
+      height: 175px;
+
+      top: 150px;
+
+      background:
+        linear-gradient(
+          90deg,
+          #4c93cc,
+          #73b7e8,
+          #3476aa
+        );
+
+      border: 8px solid #1f4d74;
+    }
+
+    .arm.left {
+      left: -40px;
+      transform: rotate(4deg);
+    }
+
+    .arm.right {
+      right: -40px;
+      transform: rotate(-4deg);
+    }
+
+    .leg {
+      position: absolute;
+
+      width: 65px;
+      height: 155px;
+
+      top: 325px;
+
+      background:
+        linear-gradient(
+          90deg,
+          #304b63,
+          #526f86,
+          #263d53
+        );
+
+      border: 8px solid #203548;
+    }
+
+    .leg.left {
+      left: 25px;
+    }
+
+    .leg.right {
+      right: 25px;
+    }
+
+    /* =========================
+       INFO PANEL
+    ========================= */
+
+    .info {
+      padding: 32px;
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .mini-head {
+      width: 65px;
+      height: 65px;
+
+      border-radius: 14px;
+
+      object-fit: cover;
+      image-rendering: pixelated;
+
+      box-shadow: 0 8px 20px rgba(34, 100, 135, .15);
+    }
+
+    .info h2 {
+      color: #183e58;
+      font-size: 27px;
+    }
+
+    .info .subtitle {
+      color: #7690a1;
+      font-size: 14px;
+      margin-top: 3px;
+    }
+
+    .details {
+      border-top: 1px solid rgba(90, 140, 165, .18);
+    }
+
+    .detail {
+      display: flex;
+      justify-content: space-between;
+
+      padding: 17px 0;
+
+      border-bottom: 1px solid rgba(90, 140, 165, .18);
+
+      font-size: 14px;
+    }
+
+    .detail span {
+      color: #7690a1;
+    }
+
+    .detail strong {
+      color: #31566f;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+
+      margin-top: 25px;
+    }
+
+    .button {
+      flex: 1;
+
+      padding: 13px;
+
+      border: 0;
+      border-radius: 12px;
+
+      cursor: pointer;
+
+      font-weight: 800;
+
+      transition: .2s;
+    }
+
+    .primary {
+      color: white;
+
+      background: linear-gradient(
+        135deg,
+        #5ec5ff,
+        #2786d0
+      );
+
+      box-shadow: 0 8px 20px rgba(37, 130, 197, .22);
+    }
+
+    .secondary {
+      color: #356079;
+      background: rgba(220, 240, 249, .85);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      padding: 35px 20px 50px;
+
+      text-align: center;
+
+      color: #66869b;
       font-size: 13px;
     }
 
-    @media (max-width: 750px) {
+    footer strong {
+      color: #39759a;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 900px) {
+      .skin-row {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
       .viewer {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        padding: 10px 12px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 75px;
+      }
+
+      .hero h1 {
+        letter-spacing: -3px;
       }
 
       .search {
         flex-direction: column;
       }
 
-      button {
-        height: 50px;
+      .search button {
+        min-height: 48px;
       }
 
-      .hero {
-        margin-bottom: 35px;
+      .skin-row {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .character-area {
+        min-height: 500px;
+      }
+
+      .info {
+        padding: 23px;
       }
     }
   </style>
@@ -216,133 +856,338 @@
 
 <body>
 
-  <header>
-    <div class="logo">Mine<span>Skin</span> Viewer</div>
-    <a href="https://mineskin.eu/" target="_blank" rel="noopener noreferrer">
-      MineSkin API
-    </a>
-  </header>
+  <!-- Animated sky -->
+  <div class="sky">
+    <div class="sun"></div>
+
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="cloud cloud-4"></div>
+
+    <div class="bird bird-1">⌁⌁</div>
+    <div class="bird bird-2">⌁⌁</div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">☁</div>
+      SkySkin
+    </div>
+
+    <ul class="nav-links">
+      <li><a href="#skins">Skins</a></li>
+      <li><a href="#viewer">Viewer</a></li>
+      <li>
+        <a href="https://mineskin.eu/" target="_blank">
+          MineSkin ↗
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <main>
+
+    <!-- Hero -->
     <section class="hero">
-      <h1>Explore <span>Minecraft</span> Skins.</h1>
+      <div class="badge">
+        ☁ Minecraft Skin Explorer
+      </div>
+
+      <h1>
+        Skins in the <span>Sky.</span>
+      </h1>
+
       <p>
-        Search for a Minecraft player and inspect their skin instantly.
+        Search for a Minecraft player, explore their skin
+        and view it in a beautiful sky-inspired interface.
       </p>
 
       <form class="search" id="searchForm">
         <input
           id="username"
           type="text"
-          placeholder="Enter Minecraft username..."
           maxlength="16"
           autocomplete="off"
+          placeholder="Minecraft username..."
           required
         >
-        <button type="submit">Search</button>
+
+        <button type="submit">
+          Search
+        </button>
       </form>
 
       <div class="status" id="status"></div>
     </section>
 
-    <section class="viewer">
-      <div class="card preview">
-        <img id="skinImage"
-             src="https://mineskin.eu/helm/Steve/200"
-             alt="Minecraft skin preview">
+    <!-- Example skins -->
+    <section class="section" id="skins">
+
+      <div class="section-title">
+        <div>
+          <h2>Explore skins</h2>
+          <p>Try one of these examples.</p>
+        </div>
       </div>
 
-      <div class="card info">
-        <h2 id="playerName">Steve</h2>
-        <p class="muted">Minecraft skin preview</p>
+      <div class="skin-row">
 
-        <div style="margin-top: 30px;">
-          <div class="info-row">
+        <div class="skin-card" data-user="Steve">
+          <img src="https://mineskin.eu/helm/Steve/100" alt="Steve">
+          <span>Steve</span>
+        </div>
+
+        <div class="skin-card" data-user="Alex">
+          <img src="https://mineskin.eu/helm/Alex/100" alt="Alex">
+          <span>Alex</span>
+        </div>
+
+        <div class="skin-card" data-user="Notch">
+          <img src="https://mineskin.eu/helm/Notch/100" alt="Notch">
+          <span>Notch</span>
+        </div>
+
+        <div class="skin-card" data-user="Dream">
+          <img src="https://mineskin.eu/helm/Dream/100" alt="Dream">
+          <span>Dream</span>
+        </div>
+
+        <div class="skin-card" data-user="Technoblade">
+          <img src="https://mineskin.eu/helm/Technoblade/100" alt="Technoblade">
+          <span>Technoblade</span>
+        </div>
+
+        <div class="skin-card" data-user="CaptainSparklez">
+          <img src="https://mineskin.eu/helm/CaptainSparklez/100" alt="CaptainSparklez">
+          <span>CaptainSparklez</span>
+        </div>
+
+        <div class="skin-card" data-user="Sapnap">
+          <img src="https://mineskin.eu/helm/Sapnap/100" alt="Sapnap">
+          <span>Sapnap</span>
+        </div>
+
+        <div class="skin-card" data-user="GeorgeNotFound">
+          <img src="https://mineskin.eu/helm/GeorgeNotFound/100" alt="GeorgeNotFound">
+          <span>George</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Viewer -->
+    <section class="viewer" id="viewer">
+
+      <!-- Character -->
+      <div class="glass character-area">
+
+        <div class="character" id="character">
+
+          <div class="head"></div>
+
+          <div class="arm left"></div>
+          <div class="arm right"></div>
+
+          <div class="body"></div>
+
+          <div class="leg left"></div>
+          <div class="leg right"></div>
+
+        </div>
+
+      </div>
+
+      <!-- Information -->
+      <div class="glass info">
+
+        <div class="info-header">
+
+          <img
+            id="miniHead"
+            class="mini-head"
+            src="https://mineskin.eu/helm/Steve/150"
+            alt="Steve"
+          >
+
+          <div>
+            <h2 id="playerName">Steve</h2>
+            <p class="subtitle">
+              Minecraft Skin
+            </p>
+          </div>
+
+        </div>
+
+        <div class="details">
+
+          <div class="detail">
             <span>Player</span>
             <strong id="playerValue">Steve</strong>
           </div>
 
-          <div class="info-row">
-            <span>Preview</span>
-            <strong>Head</strong>
+          <div class="detail">
+            <span>Model</span>
+            <strong>Classic</strong>
           </div>
 
-          <div class="info-row">
-            <span>Source</span>
+          <div class="detail">
+            <span>Preview</span>
+            <strong>Full Body</strong>
+          </div>
+
+          <div class="detail">
+            <span>Provider</span>
             <strong>MineSkin</strong>
           </div>
+
         </div>
 
-        <div class="actions">
-          <button id="downloadBtn">Download</button>
-          <button class="secondary" id="openBtn">Open Skin</button>
+        <div class="buttons">
+
+          <button
+            class="button primary"
+            id="downloadBtn"
+          >
+            ↓ Download
+          </button>
+
+          <button
+            class="button secondary"
+            id="openBtn"
+          >
+            Open Skin
+          </button>
+
         </div>
+
       </div>
+
     </section>
+
   </main>
 
   <footer>
+    <strong>SkySkin</strong> — Minecraft Skin Viewer
+    <br><br>
     Minecraft is a trademark of Mojang Studios.
-    This project is an independent fan project.
+    This is an independent fan project.
   </footer>
 
   <script>
     const form = document.getElementById("searchForm");
     const usernameInput = document.getElementById("username");
-    const skinImage = document.getElementById("skinImage");
-    const playerName = document.getElementById("playerName");
-    const playerValue = document.getElementById("playerValue");
+
     const status = document.getElementById("status");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const openBtn = document.getElementById("openBtn");
+
+    const skinCards =
+      document.querySelectorAll(".skin-card");
+
+    const miniHead =
+      document.getElementById("miniHead");
+
+    const playerName =
+      document.getElementById("playerName");
+
+    const playerValue =
+      document.getElementById("playerValue");
+
+    const downloadBtn =
+      document.getElementById("downloadBtn");
+
+    const openBtn =
+      document.getElementById("openBtn");
 
     let currentUsername = "Steve";
 
-    function updateSkin(username) {
-      const cleanUsername = username.trim();
+    function showSkin(username) {
 
-      if (!cleanUsername) return;
+      username = username.trim();
 
-      currentUsername = cleanUsername;
+      if (!username) return;
 
-      // MineSkin image endpoint
-      const imageUrl =
-        `https://mineskin.eu/helm/${encodeURIComponent(cleanUsername)}/300`;
+      currentUsername = username;
 
-      skinImage.src = imageUrl;
-      skinImage.alt = `${cleanUsername} Minecraft skin`;
+      const encoded =
+        encodeURIComponent(username);
 
-      playerName.textContent = cleanUsername;
-      playerValue.textContent = cleanUsername;
+      const headUrl =
+        `https://mineskin.eu/helm/${encoded}/200`;
 
-      status.textContent = `Loading skin for ${cleanUsername}...`;
+      miniHead.src = headUrl;
+      miniHead.alt = `${username} skin`;
 
-      skinImage.onload = () => {
+      playerName.textContent = username;
+      playerValue.textContent = username;
+
+      status.textContent =
+        `Loading ${username}...`;
+
+      miniHead.onload = () => {
         status.textContent = "";
       };
 
-      skinImage.onerror = () => {
-        status.textContent = "Could not load this skin.";
+      miniHead.onerror = () => {
+        status.textContent =
+          "Skin konnte nicht geladen werden.";
       };
+
+      document
+        .getElementById("viewer")
+        .scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
     }
 
     form.addEventListener("submit", (event) => {
+
       event.preventDefault();
-      updateSkin(usernameInput.value);
+
+      showSkin(usernameInput.value);
+
     });
 
-    openBtn.addEventListener("click", () => {
-      const url =
-        `https://mineskin.eu/helm/${encodeURIComponent(currentUsername)}/600`;
+    skinCards.forEach(card => {
 
-      window.open(url, "_blank", "noopener,noreferrer");
+      card.addEventListener("click", () => {
+
+        const username =
+          card.dataset.user;
+
+        usernameInput.value = username;
+
+        showSkin(username);
+
+      });
+
     });
 
     downloadBtn.addEventListener("click", () => {
+
       const url =
         `https://mineskin.eu/download/${encodeURIComponent(currentUsername)}`;
 
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+    });
+
+    openBtn.addEventListener("click", () => {
+
+      const url =
+        `https://mineskin.eu/skin/${encodeURIComponent(currentUsername)}`;
+
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
     });
   </script>
 
