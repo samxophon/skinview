@@ -35,10 +35,6 @@ MineSkin API
 
 🚀 Getting Started
 
-Clone the repository:
-
-git clone https://github.com/YOUR-USERNAME/mineskin-viewer.git
-cd mineskin-viewer
 
 
 Then simply open:
